@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<meta name="description" content="Offline Job Shift & Break Tracker">
+<title>ShiftTrack • Offline</title>
+<style>
+:root{--bg:#080b14;--panel:#101625;--panel2:#151c2d;--text:#f4f7fb;--muted:#9ba7bc;--line:#273148;--accent:#6d8cff;--good:#32d583;--warn:#ffb020;--bad:#ff5c77;--shadow:0 18px 55px rgba(0,0,0,.28)}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0%,#182445 0,#080b14 38%);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:15px;line-height:1.6;letter-spacing:.3px;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit}button{cursor:pointer}
+.app{max-width:1180px;margin:auto;padding:20px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,#6d8cff,#8d5cff);display:grid;place-items:center;font-weight:900;box-shadow:var(--shadow);color:#fff;font-size:18px}
+h1{font-size:20px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:2px}
+.card{background:rgba(16,22,37,.88);border:1px solid rgba(255,255,255,.07);border-radius:22px;box-shadow:var(--shadow);padding:18px;backdrop-filter:blur(10px)}
+.grid{display:grid;grid-template-columns:1.35fr .65fr;gap:18px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{background:var(--panel2);border:1px solid var(--line);border-radius:15px;padding:16px;text-align:center}
+.label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700}.value{font-size:18px;font-weight:900;margin-top:6px;color:var(--text)}
+.hero{text-align:center;padding:26px 16px}.status{display:inline-flex;padding:7px 12px;border-radius:999px;background:#1b2743;color:#b9c7ff;font-weight:800;font-size:12px;margin-bottom:12px}.status.good{background:#0f3d20;color:#52e07d}.status.bad{background:#4d1a25;color:#ff7c93}.status.warn{background:#4d3d0a;color:#ffd966}
+.timer{font-variant-numeric:tabular-nums;font-size:clamp(48px,10vw,88px);line-height:1;font-weight:900;letter-spacing:-.055em}.timer small{font-size:14px;color:var(--muted);letter-spacing:0;font-weight:600;display:block;margin-top:6px}
+.progress{height:11px;background:#222b3d;border-radius:99px;overflow:hidden;margin-top:12px}.bar{height:100%;width:0;background:linear-gradient(90deg,#6d8cff,#9d70ff);transition:width .5s}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+button{border:0;border-radius:13px;padding:13px 15px;font-weight:800;color:#fff;background:#222c42}button.primary{background:linear-gradient(135deg,#6d8cff,#805cff)}button.good{background:#17613f}button:disabled{opacity:.5;cursor:not-allowed}
+.section-title{font-size:15px;font-weight:850;margin:0 0 12px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}.field select{width:100%;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:11px;color:var(--text)}
+.pill{padding:6px 10px;border-radius:999px;font-size:11px;font-weight:800;background:#202a3d}.goodtext{color:var(--good)}.warntext{color:var(--warn)}.badtext{color:var(--bad)}
+.breakbox{margin-top:18px;padding:16px;border-radius:17px;background:#0d1422;border:1px solid var(--line)}.breaktimer{font-size:32px;font-weight:900;font-variant-numeric:tabular-nums;margin:4px 0}
+.history{margin-top:18px}.history-item{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);font-size:13px}.history-item:last-child{border:none}
+.notice{margin-top:14px;padding:12px 14px;border-radius:13px;background:#171f31;border:1px solid var(--line);font-size:13px}.notice.bad{background:#2a151d;border-color:#5c2937}.notice.good{background:#152a1b;border-color:#2d5f38}
+footer{padding:18px 4px;text-align:center;color:#69758b;font-size:11px}
+.top-actions{display:flex;gap:8px}.iconbtn{padding:10px 12px}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.app{padding:12px}.card{border-radius:18px;padding:14px}.controls{grid-template-columns:1fr}.timer{font-size:58px}.stats{gap:8px}.stat{padding:12px}.value{font-size:17px}.actions{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand"><div class="logo">ST</div><div><h1>ShiftTrack</h1><div class="sub">Offline • local-only shift & break tracker</div></div></div>
+  <div class="top-actions"><button class="iconbtn" id="installBtn" hidden>Install</button><button class="iconbtn" id="resetBtn">Reset Day</button></div>
+</header>
+
+<div class="grid">
+<main>
+<div class="card">
+  <div class="controls">
+    <div class="field"><label>Shift</label><select id="shift"></select></div>
+    <div class="field"><label>Day Type</label><select id="dayType"><option value="full">Full Day • 9h</option><option value="half">Half Day • 4h 30m</option></select></div>
+  </div>
+  <div class="hero">
+    <div id="status" class="status">NOT LOGGED IN</div>
+    <div id="timer" class="timer">00:00:00</div>
+    <small>Time Logged In</small>
+    <div class="progress"><div class="bar" id="progress"></div></div>
+    <div class="row" style="margin-top:8px;font-size:12px;color:var(--muted)"><span id="progressText">0%</span><span id="remaining">Required: 09:00:00</span></div>
+    <div class="actions">
+      <button class="primary" id="loginBtn">Start Shift</button>
+      <button id="logoutBtn" disabled>End Shift</button>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <div class="section-title">Break Tracking</div>
+  <div class="row"><div><div class="label">Break Used</div><div class="value" id="breakUsed">00:00:00</div></div><div style="text-align:right"><div class="label">Allowed Break</div><div class="value" id="breakAllowed">01:00:00</div></div></div>
+  <div class="breakbox">
+    <div class="label" id="breakLabel">Recommended return-to-work time</div>
+    <div class="breaktimer" id="breakTimer">--:--</div>
+    <div class="row"><span id="breakState" class="pill">Not on break</span><span id="overtime"></span></div>
+    <div class="actions">
+      <button class="primary" id="startBreakBtn" disabled>Start Break</button>
+      <button class="good" id="endBreakBtn" disabled>End Break</button>
+    </div>
+  </div>
+  <div id="breakNotice"></div>
+</div>
+
+<div class="card history">
+  <div class="section-title">Break History</div>
+  <div id="history"></div>
+</div>
+</main>
+
+<aside>
+<div class="card">
+  <div class="section-title">Today's Dashboard</div>
+  <div class="stats">
+    <div class="stat"><div class="label">Shift</div><div class="value" id="dashShift">6:30 AM</div></div>
+    <div class="stat"><div class="label">Day Type</div><div class="value" id="dashType">Full</div></div>
+    <div class="stat"><div class="label">Current Time</div><div class="value" id="clock">--:--:--</div></div>
+    <div class="stat"><div class="label">Login</div><div class="value" id="loginStatus">—</div></div>
+  </div>
+  <div class="notice" id="loginNotice">Choose your shift and press Start Shift when you log in.</div>
+</div>
+<div class="card" style="margin-top:18px">
+  <div class="section-title">Work Summary</div>
+  <div class="row" style="margin:12px 0"><span class="label">Required work</span><strong id="required">09:00:00</strong></div>
+  <div class="row" style="margin:12px 0"><span class="label">Productive work</span><strong id="worked">00:00:00</strong></div>
+  <div class="row" style="margin:12px 0"><span class="label">Remaining</span><strong id="remain2">09:00:00</strong></div>
+  <div class="row" style="margin:12px 0"><span class="label">Break overtime</span><strong id="extra">00:00:00</strong></div>
+</div>
+</aside>
+</div>
+<footer>Data stays on this device using localStorage. No account, server, or internet required.</footer>
+</div>
+
+<script>
+const SHIFTS=[
+ {name:"6:30 AM – 3:30 PM",start:"06:30",end:"15:30"},
+ {name:"9:00 AM – 6:00 PM",start:"09:00",end:"18:00"},
+ {name:"10:00 AM – 7:00 PM",start:"10:00",end:"19:00"},
+ {name:"11:00 AM – 8:00 PM",start:"11:00",end:"20:00"}
+];
+const BREAK_ALLOWED=60*60;
+const KEY="shifttrack_v1";
+let state=JSON.parse(localStorage.getItem(KEY)||"null")||{
+ shift:0,dayType:"full",loginAt:null,logoutAt:null,breaks:[],activeBreak:null
+};
+const $=id=>document.getElementById(id);
+SHIFTS.forEach((s,i)=>{let o=document.createElement("option");o.value=i;o.textContent=s.name;$("shift").appendChild(o)});
+$("shift").value=state.shift;$("dayType").value=state.dayType;
+
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function todayKey(d=new Date()){return d.toISOString().slice(0,10)}
+function parseToday(time){
+ const [h,m]=time.split(":").map(Number), d=new Date(); d.setHours(h,m,0,0); return d;
+}
+function fmt(sec){
+ sec=Math.max(0,Math.floor(sec)); const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;
+ return [h,m,s].map((x,i)=>String(x).padStart(2,"0")).join(":");
+}
+function fmtShort(sec){sec=Math.max(0,Math.floor(sec));return `${String(Math.floor(sec/60)).padStart(2,"0")}:${String(sec%60).padStart(2,"0")}`}
+function fmtDate(d){return d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit",second:"2-digit"})}
+function requiredSec(){return state.dayType==="half"?270*60:540*60}
+function breakUsedSec(now=Date.now()){
+ return state.breaks.reduce((a,b)=>a+(b.endedAt?Math.max(0,(b.endedAt-b.startedAt)/1000):0),0)
+ + (state.activeBreak?Math.max(0,(now-state.activeBreak.startedAt)/1000):0);
+}
+function workElapsed(now=Date.now()){
+ if(!state.loginAt)return 0;
+ const end=state.logoutAt||now;
+ return Math.max(0,(end-state.loginAt)/1000);
+}
+function productive(now=Date.now()){return Math.max(0,workElapsed(now)-breakUsedSec(now))}
+function loginInfo(){
+ if(!state.loginAt)return null;
+ const d=new Date(state.loginAt), shiftStart=parseToday(SHIFTS[state.shift].start);
+ const diff=(d-shiftStart)/60000;
+ return {late:diff>15, minutes:Math.max(0,Math.floor(diff)), timely:diff<=15};
+}
+function render(){
+ const now=Date.now(), s=SHIFTS[state.shift], req=requiredSec(), used=breakUsedSec(now), prod=productive(now), rem=Math.max(0,req-prod);
+ $("dashShift").textContent=s.name.split(" – ")[0];
+ $("dashType").textContent=state.dayType==="half"?"Half":"Full";
+ $("clock").textContent=fmtDate(new Date(now));
+ $("timer").textContent=fmt(workElapsed(now));
+ $("required").textContent=fmt(req);
+ $("worked").textContent=fmt(prod);
+ $("remain2").textContent=fmt(rem);
+ $("remaining").textContent=rem>0?"Remaining: "+fmt(rem):"Required work complete";
+ $("breakUsed").textContent=fmt(used);
+ $("breakAllowed").textContent=fmt(BREAK_ALLOWED);
+ $("extra").textContent=fmt(Math.max(0,used-BREAK_ALLOWED));
+ $("progress").style.width=Math.min(100,prod/req*100)+"%";
+ $("progressText").textContent=Math.min(100,prod/req*100).toFixed(1)+"%";
+ $("shift").value=state.shift;$("dayType").value=state.dayType;
+
+ let status="NOT LOGGED IN", cls="", info=loginInfo();
+ if(state.activeBreak){status="ON BREAK";cls="warn"}
+ else if(state.logoutAt){status="SHIFT COMPLETE";cls="good"}
+ else if(state.loginAt){status=info?.late?"LATE":"WORKING";cls=info?.late?"bad":"good"}
+ $("status").textContent=status;$("status").className="status "+cls;
+ $("loginBtn").disabled=!!state.loginAt;
+ $("logoutBtn").disabled=!state.loginAt||!!state.logoutAt||!!state.activeBreak;
+ $("startBreakBtn").disabled=!state.loginAt||!!state.logoutAt||!!state.activeBreak;
+ $("endBreakBtn").disabled=!state.activeBreak;
+
+ if(info){
+   $("loginStatus").textContent=info.late?"Late":"Timely";
+   $("loginStatus").className=info.late?"value badtext":"value goodtext";
+   $("loginNotice").className="notice "+(info.late?"bad":"good");
+   $("loginNotice").textContent=info.late?`Late by ${info.minutes} minute${info.minutes===1?"":"s"}. Scheduled start: ${s.start}.`:`Timely login. Grace period ends 15 minutes after ${s.start}.`;
+ }else{
+   $("loginStatus").textContent="—";$("loginStatus").className="value";
+   $("loginNotice").className="notice";$("loginNotice").textContent=`Scheduled: ${s.name}. Start the shift when you log in.`;
+ }
+
+ if(state.activeBreak){
+   const elapsed=(now-state.activeBreak.startedAt)/1000, left=Math.max(0,BREAK_ALLOWED-elapsed);
+   $("breakLabel").textContent="Return-to-work countdown";
+   $("breakTimer").textContent=left>0?fmtShort(left):"OVERTIME "+fmtShort(-left);
+   $("breakState").textContent=left>0?"Break running":"Break overtime";
+   $("breakState").className="pill "+(left>0?"":"badtext");
+   $("overtime").textContent=left<=0?"Extra work required: "+fmt(-left):"";
+   $("breakNotice").innerHTML=left<=0?`<div class="notice bad">Break exceeded the allowed limit. Extra work required: <b>${fmt(-left)}</b>.</div>`:"";
+ }else{
+   const left=Math.max(0,BREAK_ALLOWED-used);
+   $("breakLabel").textContent="Recommended return-to-work time";
+   $("breakTimer").textContent=state.loginAt&&!state.logoutAt?fmtShort(left):"--:--";
+   $("breakState").textContent=used>=BREAK_ALLOWED?"Allowance used":"Not on break";
+   $("overtime").textContent=used>BREAK_ALLOWED?"Overtime: "+fmt(used-BREAK_ALLOWED):"";
+   $("breakNotice").innerHTML=used>BREAK_ALLOWED?`<div class="notice bad">Break allowance exceeded. Extra work required: <b>${fmt(used-BREAK_ALLOWED)}</b>.</div>`:"";
+ }
+ renderHistory();
+}
+function renderHistory(){
+ const el=$("history"); if(!state.breaks.length){el.innerHTML='<div class="empty">No completed breaks yet.</div>';return}
+ el.innerHTML=state.breaks.slice().reverse().map((b,i)=>`<div class="history-item"><div><b>Break ${state.breaks.length-i}</b><br><span style="color:var(--muted)">${fmtDate(new Date(b.startedAt))} → ${fmtDate(new Date(b.endedAt))}</span></div><div>${fmt((b.endedAt-b.startedAt)/1000)}</div></div>`).join("");
+}
+$("shift").onchange=()=>{if(state.loginAt){alert("Shift cannot be changed during an active session. End/reset the day first.");$("shift").value=state.shift;return}state.shift=+$("shift").value;save();render()};
+$("dayType").onchange=()=>{if(state.loginAt){alert("Day type cannot be changed during an active session.");$("dayType").value=state.dayType;return}state.dayType=$("dayType").value;save();render()};
+$("loginBtn").onclick=()=>{state.loginAt=Date.now();state.logoutAt=null;state.breaks=[];state.activeBreak=null;save();render()};
+$("logoutBtn").onclick=()=>{if(confirm("End today's shift?")){state.logoutAt=Date.now();save();render()}};
+$("startBreakBtn").onclick=()=>{state.activeBreak={startedAt:Date.now()};save();render()};
+$("endBreakBtn").onclick=()=>{if(!state.activeBreak)return;state.breaks.push({startedAt:state.activeBreak.startedAt,endedAt:Date.now()});state.activeBreak=null;save();render()};
+$("resetBtn").onclick=()=>{if(confirm("Reset today's shift, login, and break history?")){state={shift:+$("shift").value,dayType:$("dayType").value,loginAt:null,logoutAt:null,breaks:[],activeBreak:null};save();render()}};
+
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;$("installBtn").hidden=false});
+$("installBtn").onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$("installBtn").hidden=true}};
+render();setInterval(render,500);
+</script>
+</body>
+</html>
